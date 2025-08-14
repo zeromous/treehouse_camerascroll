@@ -1,10 +1,13 @@
 import pygame
+import pygame.mouse
 import sys
 
 # This PYGAME demo was made by Zeromous for TREEHOUSE WARS  
 # [R] KEY increases the playfield height at the top
 # [UP]/[DOWN] KEY scrolls the camera up and down
 # Hold [SHIFT] KEY to scroll faster
+
+GAME_PATH = "d:/gamedev/treehouse_camerascroll"
 
 class Level:
     def __init__(self, screen_width, screen_height, max_unit_init, increment_height, font_path):
@@ -15,9 +18,12 @@ class Level:
         self.PLAYFIELD_HEIGHT = max(self.MAX_UNIT_INIT * 64 + 256, self.SCREEN_HEIGHT)
         self.font = pygame.font.Font(font_path, 14)
         self.playfield = pygame.Surface((self.SCREEN_WIDTH, self.PLAYFIELD_HEIGHT))
-        self.playfield.fill((0, 128, 0))
+        self.playfield.fill((80, 168, 225))
         self.top_y = 0
         self.draw_playfield_elements(self.top_y, self.PLAYFIELD_HEIGHT)
+        self.background_image = pygame.image.load( GAME_PATH + "/graphics/level/level1/0.png")
+        self.playfield.blit(self.background_image, (0, 0))
+        
 
     def draw_playfield_lines(self, y_position):
         if self.top_y < 0:
@@ -35,7 +41,6 @@ class Level:
 
     def draw_playfield_elements(self, start_height, end_height):
         y_position = start_height
-
         if self.top_y < 0:
                 self.draw_playfield_lines(self.top_y)
                 self.draw_playfield_numbers(self.top_y)
@@ -50,7 +55,7 @@ class Level:
     def increase_playfield_height(self):
         self.PLAYFIELD_HEIGHT += self.INCREMENT_HEIGHT
         new_playfield = pygame.Surface((self.SCREEN_WIDTH, self.PLAYFIELD_HEIGHT))
-        new_playfield.fill((0, 128, 0))
+        new_playfield.fill((51, 153, 255))
         new_playfield.blit(self.playfield, (0, self.INCREMENT_HEIGHT))
         self.playfield = new_playfield
         self.top_y -= self.INCREMENT_HEIGHT
@@ -75,6 +80,15 @@ class GameLoop:
                     self.running = False
                 elif event.type == pygame.KEYUP and event.key == pygame.K_r:
                     self.r_pressed = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 4:  # Scroll wheel up
+                        self.camera_y -= 64  # Move exactly 64 units
+                        if self.camera_y < 0:
+                            self.camera_y = 0
+                    elif event.button == 5:  # Scroll wheel down
+                        self.camera_y += 64  # Move exactly 64 units
+                        if self.camera_y > self.level.PLAYFIELD_HEIGHT - self.SCREEN_HEIGHT:
+                            self.camera_y = self.level.PLAYFIELD_HEIGHT - self.SCREEN_HEIGHT
 
             keys = pygame.key.get_pressed()
             scroll_speed = self.SCROLL_SPEED * 5 if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT] else self.SCROLL_SPEED
@@ -94,6 +108,11 @@ class GameLoop:
                 self.camera_y += self.level.INCREMENT_HEIGHT
                 self.r_pressed = True
 
+
+
+            if keys[pygame.K_ESCAPE]:
+                self.running = False
+              
             self.screen.fill((0, 0, 0))
             camera_view = self.level.playfield.subsurface((0, self.camera_y, self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
             self.screen.blit(camera_view, (0, 0))
